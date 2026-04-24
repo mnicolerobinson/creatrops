@@ -1,0 +1,5 @@
+{
+  "name": "creatrops",
+  "private": true,
+  "description": "Static site served with npx serve on Railway"
+}
