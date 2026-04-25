@@ -353,20 +353,38 @@
   .vsl-corner.bl { bottom: 0; left: 0; border-width: 0 0 1px 1px; }
   .vsl-corner.br { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
 
-  .vsl-unmute-pill {
+  .vsl-control-bar {
     position: absolute;
-    left: 16px;
-    bottom: 16px;
+    bottom: 0;
+    left: 0;
+    right: 0;
     z-index: 3;
-    padding: 8px 14px;
-    border: 0;
-    background: rgba(0,0,0,0.6);
+    padding: 12px 16px;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.25s ease;
+  }
+
+  .vsl-control-bar.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .vsl-control-button {
+    background: none;
+    border: none;
     color: var(--white);
-    font-family: 'Montserrat', sans-serif;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+    font-size: 16px;
     cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    opacity: 0.8;
+  }
+
+  .vsl-control-button:hover {
+    opacity: 1;
   }
 
   .vsl-placeholder {
@@ -1390,7 +1408,10 @@
     <video id="vslVideo" width="100%" height="100%" style="object-fit:cover;position:absolute;top:0;left:0;" autoplay muted playsinline>
       <source src="vsl.mp4" type="video/mp4">
     </video>
-    <button class="vsl-unmute-pill" type="button" onclick="unmuteVsl(this)">🔇 Click to unmute</button>
+    <div class="vsl-control-bar" id="vslControlBar">
+      <button class="vsl-control-button" id="vslMuteButton" type="button" onclick="toggleVslMute()">🔇</button>
+      <button class="vsl-control-button" id="vslPlayButton" type="button" onclick="toggleVslPlayback()">⏸</button>
+    </div>
   </div>
 </section>
 
@@ -1746,13 +1767,56 @@
     }, 5200);
   }
 
-  function unmuteVsl(pill) {
+  let vslControlsTimer;
+
+  function updateVslControls() {
     const video = document.getElementById('vslVideo');
-    video.muted = false;
-    video.volume = 1;
-    video.play();
-    pill.style.display = 'none';
+    const muteButton = document.getElementById('vslMuteButton');
+    const playButton = document.getElementById('vslPlayButton');
+    muteButton.textContent = video.muted ? '🔇' : '🔊';
+    playButton.textContent = video.paused ? '▶' : '⏸';
   }
+
+  function showVslControls() {
+    const controlBar = document.getElementById('vslControlBar');
+    controlBar.classList.remove('is-hidden');
+    clearTimeout(vslControlsTimer);
+    vslControlsTimer = setTimeout(() => {
+      controlBar.classList.add('is-hidden');
+    }, 3000);
+  }
+
+  function toggleVslMute() {
+    const video = document.getElementById('vslVideo');
+    video.muted = !video.muted;
+    if (!video.muted) video.volume = 1;
+    updateVslControls();
+    showVslControls();
+  }
+
+  function toggleVslPlayback() {
+    const video = document.getElementById('vslVideo');
+    if (video.paused) {
+      video.play();
+    } else {
+      video.pause();
+    }
+    updateVslControls();
+    showVslControls();
+  }
+
+  const vslFrame = document.querySelector('.vsl-frame');
+  const vslVideo = document.getElementById('vslVideo');
+  vslFrame.addEventListener('mouseenter', showVslControls);
+  vslFrame.addEventListener('mousemove', showVslControls);
+  vslFrame.addEventListener('mouseleave', () => {
+    document.getElementById('vslControlBar').classList.add('is-hidden');
+  });
+  vslVideo.addEventListener('play', updateVslControls);
+  vslVideo.addEventListener('pause', updateVslControls);
+  vslVideo.addEventListener('volumechange', updateVslControls);
+  updateVslControls();
+  showVslControls();
 
   // ── SCROLL ANIMATIONS ──
   const observer = new IntersectionObserver((entries) => {
