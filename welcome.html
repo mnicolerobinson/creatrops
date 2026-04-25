@@ -1299,21 +1299,13 @@
   .tier-select-card:hover .tier-select-btn { border-color: rgba(200,16,46,0.4); color: var(--white); }
   .tier-select-btn-red { background: var(--red); border-color: var(--red); color: var(--white); }
   .tier-select-card:hover .tier-select-btn-red { background: var(--red-bright); }
+  .tier-select-card.is-loading { opacity: 1 !important; pointer-events: none; border-color: rgba(201,168,76,0.45); transform: translateY(-4px); }
+  .tier-select-card.is-loading::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.06) 45%, transparent 80%); animation: checkoutShimmer 1.1s linear infinite; }
+  .tier-select-grid.is-checking-out .tier-select-card:not(.is-loading) { opacity: 0.35 !important; pointer-events: none; }
+  .tier-select-error { display: none; color: var(--red-bright); font-size: 12px; letter-spacing: 1px; margin-top: 14px; }
+  .tier-select-error.show { display: block; }
   .tier-select-note { font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,0.2); margin-top: 16px; }
-  .activation-confirm { display: none; background: var(--black-3); border: 1px solid rgba(200,16,46,0.2); padding: 56px 48px; text-align: center; margin-top: 0; position: relative; }
-  .activation-confirm::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(to right, transparent, var(--red), var(--gold), transparent); }
-  .activation-confirm.show { display: block; }
-  .activation-icon { font-size: 36px; color: var(--gold); display: block; margin-bottom: 20px; }
-  .activation-title { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 300; margin-bottom: 12px; }
-  .activation-title em { font-style: italic; color: var(--gold-light); }
-  .activation-body { font-size: 13px; line-height: 1.8; color: var(--white-muted); max-width: 480px; margin: 0 auto 40px; }
-  .activation-steps { display: flex; justify-content: center; gap: 0; position: relative; }
-  .activation-steps::before { content: ''; position: absolute; top: 10px; left: 12%; right: 12%; height: 1px; background: rgba(255,255,255,0.08); }
-  .activation-step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; max-width: 140px; position: relative; z-index: 1; }
-  .step-dot { width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); background: var(--black-3); transition: all 0.5s ease; }
-  .step-dot-active { background: var(--red); border-color: var(--red); box-shadow: 0 0 12px rgba(200,16,46,0.5); }
-  .step-dot-done { background: var(--gold); border-color: var(--gold); }
-  .activation-step span { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--white-muted); }
+  @keyframes checkoutShimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 
   @media (max-width: 900px) {
     nav { padding: 20px 24px; }
@@ -1330,7 +1322,6 @@
     .tier-select-featured { transform: none; }
     .tier-select-featured:hover { transform: translateY(-4px); }
     .affiliate-stats { grid-template-columns: repeat(3,1fr); }
-    .activation-confirm { padding: 40px 24px; }
     footer { padding: 40px 24px; flex-direction: column; gap: 16px; text-align: center; }
   }
 </style>
@@ -1684,31 +1675,7 @@
       </div>
     </div>
 
-    <!-- Activation confirmation -->
-    <div class="activation-confirm" id="activationConfirm">
-      <div class="activation-icon">✦</div>
-      <h3 class="activation-title">Setting Up Your <em id="selectedTierName">Growth Ops</em> Account</h3>
-      <p class="activation-body">Your ops team is spinning up in the background. You'll receive a notification with your portal access and setup wizard link within minutes.</p>
-      <div class="activation-steps">
-        <div class="activation-step" id="step1">
-          <div class="step-dot step-dot-active"></div>
-          <span>Account created</span>
-        </div>
-        <div class="activation-step" id="step2">
-          <div class="step-dot"></div>
-          <span>Persona assigned</span>
-        </div>
-        <div class="activation-step" id="step3">
-          <div class="step-dot"></div>
-          <span>Policy wizard ready</span>
-        </div>
-        <div class="activation-step" id="step4">
-          <div class="step-dot"></div>
-          <span>Ops team live</span>
-        </div>
-      </div>
-    </div>
-
+    <p class="tier-select-error" id="tierSelectError">Checkout could not start. Please try again.</p>
     <p class="tier-select-note">No setup fees. Cancel anytime. Your referral link activates with your account.</p>
   </div>
 </section>
@@ -1736,35 +1703,36 @@
   // ── TIER SELECTION ──
   const tierNames = { starter: 'Starter Ops', growth: 'Growth Ops', ceo: 'Creator CEO' };
 
-  function selectTier(card, tier) {
-    document.querySelectorAll('.tier-select-card').forEach(c => c.style.opacity = '0.4');
-    card.style.opacity = '1';
-    document.getElementById('selectedTierName').textContent = tierNames[tier];
-    document.getElementById('activationConfirm').classList.add('show');
-    document.querySelector('.tier-select-grid').style.pointerEvents = 'none';
-    window.scrollTo({ top: document.getElementById('activationConfirm').offsetTop - 80, behavior: 'smooth' });
-    animateSteps();
-  }
+  async function selectTier(card, tier) {
+    const grid = document.querySelector('.tier-select-grid');
+    const error = document.getElementById('tierSelectError');
+    const button = card.querySelector('.tier-select-btn');
+    const originalButtonText = button.textContent;
 
-  function animateSteps() {
-    const steps = ['step1','step2','step3','step4'];
-    const delays = [0, 1200, 2400, 3800];
-    steps.forEach((id, i) => {
-      setTimeout(() => {
-        const dot = document.getElementById(id).querySelector('.step-dot');
-        if (i > 0) {
-          const prevDot = document.getElementById(steps[i-1]).querySelector('.step-dot');
-          prevDot.classList.remove('step-dot-active');
-          prevDot.classList.add('step-dot-done');
-        }
-        dot.classList.add('step-dot-active');
-      }, delays[i]);
-    });
-    setTimeout(() => {
-      const lastDot = document.getElementById('step4').querySelector('.step-dot');
-      lastDot.classList.remove('step-dot-active');
-      lastDot.classList.add('step-dot-done');
-    }, 5200);
+    error.classList.remove('show');
+    grid.classList.add('is-checking-out');
+    card.classList.add('is-loading');
+    button.textContent = 'Opening Checkout...';
+
+    try {
+      const response = await fetch('https://app.creatrops.com/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || 'Checkout could not start.');
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      console.error(err);
+      error.textContent = 'Checkout could not start. Please try again.';
+      error.classList.add('show');
+      grid.classList.remove('is-checking-out');
+      card.classList.remove('is-loading');
+      button.textContent = originalButtonText || `Select ${tierNames[tier]}`;
+    }
   }
 
   let vslControlsTimer;
