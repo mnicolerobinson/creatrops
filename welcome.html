@@ -358,9 +358,9 @@
     left: 16px;
     bottom: 16px;
     z-index: 3;
-    padding: 9px 12px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(5,5,5,0.72);
+    padding: 8px 14px;
+    border: 0;
+    background: rgba(0,0,0,0.6);
     color: var(--white);
     font-family: 'Montserrat', sans-serif;
     font-size: 10px;
@@ -1387,7 +1387,9 @@
     <div class="vsl-corner tr"></div>
     <div class="vsl-corner bl"></div>
     <div class="vsl-corner br"></div>
-    <iframe id="vslIframe" width="100%" height="100%" src="https://www.youtube.com/embed/nf3MlWPS6vQ?autoplay=1&mute=1" title="CreatrOps Your Brand Deals  Finally Running Themselves" style="position:absolute;top:0;left:0;border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <video id="vslVideo" width="100%" height="100%" style="object-fit:cover;position:absolute;top:0;left:0;" autoplay muted playsinline>
+      <source src="vsl.mp4" type="video/mp4">
+    </video>
     <button class="vsl-unmute-pill" type="button" onclick="unmuteVsl(this)">🔇 Click to unmute</button>
   </div>
 </section>
@@ -1745,8 +1747,10 @@
   }
 
   function unmuteVsl(pill) {
-    const iframe = document.getElementById('vslIframe');
-    iframe.src = iframe.src.replace('mute=1', 'mute=0');
+    const video = document.getElementById('vslVideo');
+    video.muted = false;
+    video.volume = 1;
+    video.play();
     pill.style.display = 'none';
   }
 
