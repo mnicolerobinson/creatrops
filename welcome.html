@@ -345,6 +345,7 @@
     border-color: var(--red);
     border-style: solid;
     opacity: 0.6;
+    z-index: 2;
   }
 
   .vsl-corner.tl { top: 0; left: 0; border-width: 1px 0 0 1px; }
@@ -1370,12 +1371,7 @@
     <div class="vsl-corner tr"></div>
     <div class="vsl-corner bl"></div>
     <div class="vsl-corner br"></div>
-    <div class="vsl-placeholder">
-      <div class="play-btn" onclick="alert('VSL video goes here')">
-        <div class="play-icon"></div>
-      </div>
-      <span class="vsl-caption">Watch the 3-minute overview</span>
-    </div>
+    <iframe src="https://app.heygen.com/embeds/b44df5b24f4341dcb34f84ebaa3311e3?autoplay=1&mute=1" width="100%" height="100%" style="position:absolute;top:0;left:0;border:0;" allow="autoplay; fullscreen" allowfullscreen title="CreatrOps overview"></iframe>
   </div>
 </section>
 
