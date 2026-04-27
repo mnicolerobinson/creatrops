@@ -557,6 +557,23 @@
     const lastName  = document.getElementById('lastName').value.trim();
     const email     = document.getElementById('email').value.trim();
     const phone     = document.getElementById('phone').value.trim();
+    const refFromUrl = new URLSearchParams(window.location.search).get('ref');
+    const referralField = (document.getElementById('referral').value || '').trim();
+    const referral = referralField || (refFromUrl || '').trim();
+    const pregatePayload = {
+      firstName,
+      lastName,
+      email,
+      phone,
+      handles: {
+        tiktok: document.getElementById('tiktok').value.trim(),
+        instagram: document.getElementById('instagram').value.trim(),
+        youtube: document.getElementById('youtube').value.trim(),
+        twitter: document.getElementById('twitter').value.trim()
+      },
+      referral: referral
+    };
+    try { sessionStorage.setItem('creatrops_pregate_payload', JSON.stringify(pregatePayload)); } catch (e) {}
 
     const handles = ['tiktok','instagram','youtube','twitter'];
     const hasHandle = handles.some(id => document.getElementById(id).value.trim());
@@ -601,6 +618,14 @@
       }, 3200);
     }, 900);
   }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var ref = new URLSearchParams(window.location.search).get('ref');
+    if (ref) {
+      var el = document.getElementById('referral');
+      if (el && !el.value) el.value = ref;
+    }
+  });
 
   function shake(el) {
     el.style.borderColor = 'rgba(200,16,46,0.7)';
